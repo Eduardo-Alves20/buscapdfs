@@ -13,6 +13,7 @@ const {
 
 const EXTRACTION_VERSION = 1;
 const DEFAULT_CONCURRENCY = Number(process.env.INDEX_CONCURRENCY || 2);
+const MAX_INDEXABLE_TEXT_BYTES = Number(process.env.MAX_INDEXABLE_TEXT_BYTES || 900000);
 
 function parseArgs(argv) {
   const args = { concurrency: DEFAULT_CONCURRENCY };
@@ -33,9 +34,42 @@ function normalizeText(text) {
   return String(text || '').replace(/\s+/g, ' ').trim();
 }
 
+function sanitizeText(text) {
+  return String(text || '')
+    .replace(/\u0000/g, ' ')
+    .replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function truncateUtf8Bytes(text, maxBytes) {
+  const source = String(text || '');
+  if (Buffer.byteLength(source, 'utf8') <= maxBytes) return source;
+
+  let low = 0;
+  let high = source.length;
+  let best = '';
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const candidate = source.slice(0, mid);
+    const size = Buffer.byteLength(candidate, 'utf8');
+    if (size <= maxBytes) {
+      best = candidate;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return best.trim();
+}
+
 async function extractPdfText(buffer) {
   const parsed = await pdfParse(buffer, { max: 0 });
-  return normalizeText(parsed.text);
+  const normalized = normalizeText(parsed.text);
+  const sanitized = sanitizeText(normalized);
+  return truncateUtf8Bytes(sanitized, MAX_INDEXABLE_TEXT_BYTES);
 }
 
 async function indexOne(item) {
