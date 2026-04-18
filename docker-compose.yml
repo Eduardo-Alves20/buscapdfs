@@ -18,5 +18,22 @@ services:
       retries: 8
       start_period: 10s
 
+  app:
+    build: .
+    container_name: buscapdfs-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: "3001"
+      BASE_PATH: "/buscapdfs"
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/buscapdfs"
+      DOERJ_ARCHIVE_DIR: "/app/doerj"
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./doerj:/app/doerj
+
 volumes:
   buscapdfs_pgdata:

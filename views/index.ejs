@@ -13,7 +13,7 @@
   </div>
   <ul class="nav flex-column">
     <li class="nav-item">
-      <a href="/" class="nav-link active">
+      <a href="<%= withBasePath('/') %>" class="nav-link active">
         <i class="bi bi-search"></i> Busca avancada
       </a>
     </li>
@@ -215,6 +215,13 @@
 
 <%- include('partials/scripts') %>
 <script>
+const BASE_PATH = '<%= basePath %>';
+function withBasePath(pathname) {
+  const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  if (!BASE_PATH) return normalizedPath;
+  return normalizedPath === '/' ? `${BASE_PATH}/` : `${BASE_PATH}${normalizedPath}`;
+}
+
 const allSectionsCheckbox = document.getElementById('all-sections');
 const sectionInputs = [...document.querySelectorAll('.section-option')];
 const sectionsWrap = document.getElementById('section-options');
@@ -283,7 +290,7 @@ function openModal(item) {
 }
 
 function addRow(item) {
-  item.pdfUrl = `/pdf?file=${encodeURIComponent(item.relativePath)}`;
+  item.pdfUrl = `${withBasePath('/pdf')}?file=${encodeURIComponent(item.relativePath)}`;
   const idx = rowData.length;
   rowData.push(item);
 
@@ -366,7 +373,7 @@ function startSearch() {
   if (dataFim) params.set('dataFim', dataFim);
   sections.forEach(section => params.append('sections', section));
 
-  activeSource = new EventSource(`/buscar?${params.toString()}`);
+  activeSource = new EventSource(`${withBasePath('/buscar')}?${params.toString()}`);
   activeSource.onmessage = event => {
     let data;
     try { data = JSON.parse(event.data); } catch (_) { return; }
