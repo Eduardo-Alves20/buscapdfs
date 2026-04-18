@@ -1,4 +1,4 @@
-<%- include('partials/head', { title: 'Busca de PDFs' }) %>
+<%- include('partials/head', { title: 'Busca Historica' }) %>
 <body>
 
 <nav class="sidebar">
@@ -6,22 +6,22 @@
     <div class="d-flex align-items-center gap-2">
       <div class="brand-icon"><i class="bi bi-file-earmark-pdf-fill"></i></div>
       <div>
-        <h4>Busca DOERJ</h4>
-        <small>Diário Oficial do Estado RJ</small>
+        <h4>Busca Historica</h4>
+        <small>Indice local do DOERJ</small>
       </div>
     </div>
   </div>
   <ul class="nav flex-column">
     <li class="nav-item">
       <a href="/" class="nav-link active">
-        <i class="bi bi-search"></i> Busca em PDFs
+        <i class="bi bi-search"></i> Busca avancada
       </a>
     </li>
   </ul>
   <div class="sidebar-footer" style="border-top:1px solid rgba(255,255,255,0.08);padding:1rem 1.25rem;">
     <small style="color:#64748b;font-size:0.75rem;">
-      PDFs disponíveis a partir de 2018.<br>
-      Busca diretamente no texto dos arquivos locais.
+      Busca em indice PostgreSQL.<br>
+      Sem leitura de PDF em tempo real.
     </small>
   </div>
 </nav>
@@ -29,8 +29,8 @@
 <div class="main-content">
   <div class="top-bar">
     <div>
-      <h5 class="mb-0 fw-600">Busca em PDFs do DOERJ</h5>
-      <small class="text-muted">Pesquise o conteúdo textual dos PDFs locais por período e palavra-chave</small>
+      <h5 class="mb-0 fw-600">Busca Historica</h5>
+      <small class="text-muted">Pesquise publicacoes antigas por secao e palavra-chave</small>
     </div>
   </div>
 
@@ -38,34 +38,33 @@
     <div class="alert alert-info d-flex align-items-start gap-2">
       <i class="bi bi-info-circle-fill mt-1"></i>
       <div>
-        O período de datas é <strong>opcional</strong> — sem datas, todos os PDFs da base são pesquisados.
-        Os resultados aparecem assim que são encontrados, sem precisar esperar o fim da busca.
+        Esta tela faz apenas busca historica. Ela nao cria alerta automaticamente.
+        O resultado vem do indice em banco para consulta mais rapida.
       </div>
     </div>
 
-    <!-- Formulário -->
     <div class="card mb-4">
       <div class="card-header">
-        <h6 class="mb-0 fw-600"><i class="bi bi-search me-2 text-primary"></i>Parâmetros da busca</h6>
+        <h6 class="mb-0 fw-600"><i class="bi bi-search me-2 text-primary"></i>Parametros da busca</h6>
       </div>
       <div class="card-body">
         <form id="formBusca">
           <div class="row g-3">
             <div class="col-lg-5">
-              <label class="form-label">Palavra ou frase <span class="text-muted">(opcional se houver seção)</span></label>
+              <label class="form-label">Palavra ou frase <span class="text-muted">(opcional se houver secao)</span></label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                 <input
                   type="text"
                   id="inputKeyword"
                   class="form-control"
-                  placeholder="Ex: gestores do contrato, portaria, decreto..."
+                  placeholder="Ex: gestores do contrato, portaria, auditoria..."
                 />
               </div>
-              <div class="form-text">Deixe em branco e selecione seções para listar todos os PDFs daquele escopo.</div>
+              <div class="form-text">Se voce escolher uma ou mais secoes, pode deixar esse campo em branco para ver tudo daquele escopo.</div>
             </div>
             <div class="col-md-3">
-              <label class="form-label">Data início <span class="text-muted">(opcional)</span></label>
+              <label class="form-label">Data inicio <span class="text-muted">(opcional)</span></label>
               <input type="date" id="inputDataInicio" class="form-control" />
             </div>
             <div class="col-md-3">
@@ -77,9 +76,8 @@
                 <i class="bi bi-search"></i>
               </button>
             </div>
-
             <div class="col-12">
-              <label class="form-label">Seções do Diário</label>
+              <label class="form-label">Secoes do Diario</label>
               <div class="section-picker">
                 <div class="form-check mb-2">
                   <input class="form-check-input" type="checkbox" id="all-sections" checked>
@@ -98,7 +96,7 @@
                     </label>
                   <% }) %>
                 </div>
-                <div class="form-text mt-2">Marque uma ou mais seções. Se "Todo o DOERJ" estiver ativo, todas as seções são pesquisadas.</div>
+                <div class="form-text mt-2">Marque uma ou mais secoes. Se "Todo o DOERJ" estiver ativo, o filtro de secao e ignorado.</div>
               </div>
             </div>
           </div>
@@ -106,13 +104,12 @@
       </div>
     </div>
 
-    <!-- Barra de progresso (oculta inicialmente) -->
     <div id="searchStatus" style="display:none;" class="card mb-3">
       <div class="card-body py-3">
         <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2">
             <div id="statusSpinner" class="spinner-border spinner-border-sm text-primary" role="status"></div>
-            <span id="statusText" class="fw-500 small text-muted">Iniciando busca…</span>
+            <span id="statusText" class="fw-500 small text-muted">Consultando indice...</span>
           </div>
           <div class="d-flex align-items-center gap-2">
             <span class="badge bg-primary-soft text-primary" id="foundBadge" style="display:none;">
@@ -134,7 +131,6 @@
       </div>
     </div>
 
-    <!-- Área de resultados (oculta inicialmente) -->
     <div id="resultsSection" style="display:none;">
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -148,16 +144,20 @@
         <div class="card-body p-0">
           <div id="emptyState" class="empty-state" style="display:none;">
             <i class="bi bi-file-earmark-x"></i>
-            <p>Nenhuma ocorrência encontrada para os critérios informados.</p>
+            <p>Nenhuma publicacao encontrada para os criterios informados.</p>
+          </div>
+          <div id="truncatedInfo" class="alert alert-warning rounded-0 border-0 mb-0" style="display:none;">
+            Foram exibidos os primeiros <strong id="maxResultsLabel">0</strong> resultados. Refine os filtros para reduzir o volume.
           </div>
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="resultsTable" style="display:none;">
               <thead>
                 <tr>
                   <th>Data</th>
-                  <th>Seção</th>
-                  <th>Menções</th>
-                  <th>Primeiro trecho</th>
+                  <th>Arquivo</th>
+                  <th>Secao</th>
+                  <th>Mencoes</th>
+                  <th>Resumo</th>
                   <th>Abrir</th>
                 </tr>
               </thead>
@@ -167,42 +167,40 @@
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
-<!-- Modal de detalhe -->
 <div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <div>
-          <h5 class="modal-title mb-1">Trecho encontrado</h5>
-          <small class="text-muted">Clique no botão para abrir o PDF completo em nova aba</small>
+          <h5 class="modal-title mb-1">Resumo da materia</h5>
+          <small class="text-muted">Clique no botao azul para abrir o PDF oficial local</small>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
         <div class="alert-meta-grid mb-4">
           <div>
-            <small class="text-muted d-block">Data</small>
+            <small class="text-muted d-block">Data do DO</small>
             <strong id="modal-data">-</strong>
           </div>
           <div>
-            <small class="text-muted d-block">Seção</small>
+            <small class="text-muted d-block">Arquivo</small>
+            <strong id="modal-arquivo">-</strong>
+          </div>
+          <div>
+            <small class="text-muted d-block">Secao</small>
             <strong id="modal-secao">-</strong>
           </div>
           <div>
-            <small class="text-muted d-block">Menções no PDF</small>
+            <small class="text-muted d-block">Mencoes encontradas</small>
             <strong id="modal-mencoes">-</strong>
-          </div>
-          <div>
-            <small class="text-muted d-block">Arquivo</small>
-            <strong id="modal-arquivo" style="font-size:0.8rem;word-break:break-all;">-</strong>
           </div>
         </div>
         <div>
-          <small class="text-muted d-block mb-2">Trecho do texto</small>
+          <small class="text-muted d-block mb-2">Resumo encontrado</small>
           <div class="highlighted-reading" id="modal-snippet">-</div>
         </div>
       </div>
@@ -217,47 +215,72 @@
 
 <%- include('partials/scripts') %>
 <script>
-// ── Seções ────────────────────────────────────────────────────────────────────
 const allSectionsCheckbox = document.getElementById('all-sections');
 const sectionInputs = [...document.querySelectorAll('.section-option')];
-const sectionsWrap  = document.getElementById('section-options');
+const sectionsWrap = document.getElementById('section-options');
+const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+let activeSource = null;
+let rowData = [];
 
 function syncSectionState() {
   if (allSectionsCheckbox.checked) {
-    sectionInputs.forEach(i => { i.checked = false; i.disabled = true; });
+    sectionInputs.forEach(input => {
+      input.checked = false;
+      input.disabled = true;
+    });
     sectionsWrap.classList.add('is-disabled');
-  } else {
-    sectionInputs.forEach(i => { i.disabled = false; });
-    sectionsWrap.classList.remove('is-disabled');
+    return;
   }
+  sectionInputs.forEach(input => { input.disabled = false; });
+  sectionsWrap.classList.remove('is-disabled');
 }
+
 allSectionsCheckbox.addEventListener('change', syncSectionState);
 sectionInputs.forEach(input => {
   input.addEventListener('change', () => {
-    allSectionsCheckbox.checked = !sectionInputs.some(i => i.checked);
+    allSectionsCheckbox.checked = !sectionInputs.some(item => item.checked);
     syncSectionState();
   });
 });
 
-// ── Modal ─────────────────────────────────────────────────────────────────────
-const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+function setSearching(on) {
+  const btn = document.getElementById('btnBuscar');
+  const cancel = document.getElementById('btnCancelar');
+  const spin = document.getElementById('statusSpinner');
+  const bar = document.getElementById('progressBar');
 
-function openModal(data) {
-  document.getElementById('modal-data').textContent    = data.date         || '-';
-  document.getElementById('modal-secao').textContent   = data.sectionLabel || '-';
-  document.getElementById('modal-arquivo').textContent = data.filename      || '-';
-  document.getElementById('modal-mencoes').textContent =
-    data.count != null ? `${data.count} menção(ões)` : '-';
-  document.getElementById('modal-snippet').innerHTML   = data.highlightedSnippet || '-';
-
-  const btn = document.getElementById('modal-open-pdf');
-  btn.href = data.pdfUrl || '#';
-  btn.classList.toggle('disabled', !data.pdfUrl);
-  resultModal.show();
+  btn.disabled = on;
+  btn.innerHTML = on ? '<span class="spinner-border spinner-border-sm"></span>' : '<i class="bi bi-search"></i>';
+  cancel.style.display = on ? '' : 'none';
+  spin.style.display = on ? '' : 'none';
+  bar.classList.toggle('progress-bar-animated', on);
+  bar.classList.toggle('progress-bar-striped', on);
 }
 
-// ── Adiciona linha (1 por PDF) ────────────────────────────────────────────────
-let rowData = [];
+function resetResults() {
+  rowData = [];
+  document.getElementById('resultsTbody').innerHTML = '';
+  document.getElementById('resultsTable').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('truncatedInfo').style.display = 'none';
+  document.getElementById('resultCountBadge').textContent = '0';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('foundBadge').style.display = 'none';
+  document.getElementById('foundCount').textContent = '0';
+}
+
+function openModal(item) {
+  document.getElementById('modal-data').textContent = item.date || '-';
+  document.getElementById('modal-arquivo').textContent = item.filename || '-';
+  document.getElementById('modal-secao').textContent = item.sectionLabel || '-';
+  document.getElementById('modal-mencoes').textContent = item.count != null ? `${item.count} mencao(oes)` : '-';
+  document.getElementById('modal-snippet').innerHTML = item.highlightedSnippet || '-';
+
+  const btn = document.getElementById('modal-open-pdf');
+  btn.href = item.pdfUrl || '#';
+  btn.classList.toggle('disabled', !item.pdfUrl);
+  resultModal.show();
+}
 
 function addRow(item) {
   item.pdfUrl = `/pdf?file=${encodeURIComponent(item.relativePath)}`;
@@ -266,151 +289,151 @@ function addRow(item) {
 
   const countHtml = item.count != null
     ? `<span class="badge bg-warning-soft text-warning fw-600">${item.count}</span>`
-    : `<span class="text-muted small">—</span>`;
+    : '<span class="text-muted small">-</span>';
 
   const tr = document.createElement('tr');
   tr.className = 'clickable-row';
-  tr.tabIndex  = 0;
-  tr.title     = 'Clique para ver o trecho completo';
+  tr.tabIndex = 0;
   tr.dataset.idx = idx;
-
+  tr.title = 'Clique para ver o resumo da materia';
   tr.innerHTML = `
-    <td><span class="badge bg-secondary-soft text-secondary">${item.date}</span></td>
-    <td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-      <span class="badge bg-info-soft text-info">${item.sectionLabel}</span>
+    <td><span class="badge bg-secondary-soft text-secondary">${item.date || '-'}</span></td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.filename || '-'}</td>
+    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+      <span class="badge bg-info-soft text-info">${item.sectionLabel || '-'}</span>
     </td>
     <td style="text-align:center">${countHtml}</td>
-    <td style="max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-      ${item.highlightedSnippet}
-    </td>
+    <td style="max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.highlightedSnippet || '-'}</td>
     <td>
-      <a href="${item.pdfUrl}" target="_blank" rel="noopener noreferrer"
-         class="btn btn-sm btn-outline-primary" title="Abrir PDF em nova aba"
-         onclick="event.stopPropagation()">
+      <a href="${item.pdfUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary" data-row-ignore="true">
         <i class="bi bi-box-arrow-up-right"></i>
       </a>
     </td>
   `;
 
-  tr.addEventListener('click', () => openModal(rowData[tr.dataset.idx]));
-  tr.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(rowData[tr.dataset.idx]); }
+  tr.addEventListener('click', event => {
+    if (event.target.closest('[data-row-ignore="true"]')) return;
+    openModal(rowData[Number(tr.dataset.idx)]);
+  });
+
+  tr.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    openModal(rowData[Number(tr.dataset.idx)]);
   });
 
   document.getElementById('resultsTbody').appendChild(tr);
   document.getElementById('resultsTable').style.display = '';
-  document.getElementById('emptyState').style.display   = 'none';
+  document.getElementById('emptyState').style.display = 'none';
 }
-
-// ── Estado do botão / barra ───────────────────────────────────────────────────
-function setSearching(on) {
-  const btn    = document.getElementById('btnBuscar');
-  const cancel = document.getElementById('btnCancelar');
-  const spin   = document.getElementById('statusSpinner');
-  const bar    = document.getElementById('progressBar');
-
-  btn.disabled   = on;
-  btn.innerHTML  = on ? '<span class="spinner-border spinner-border-sm"></span>' : '<i class="bi bi-search"></i>';
-  cancel.style.display = on ? '' : 'none';
-  spin.style.display   = on ? '' : 'none';
-  bar.classList.toggle('progress-bar-animated', on);
-  bar.classList.toggle('progress-bar-striped',  on);
-}
-
-// ── Busca SSE ─────────────────────────────────────────────────────────────────
-let activeSource = null;
 
 function startSearch() {
-  const keyword    = document.getElementById('inputKeyword').value.trim();
+  const keyword = document.getElementById('inputKeyword').value.trim();
   const dataInicio = document.getElementById('inputDataInicio').value;
-  const dataFim    = document.getElementById('inputDataFim').value;
-  const sections   = sectionInputs.filter(i => i.checked).map(i => i.value);
+  const dataFim = document.getElementById('inputDataFim').value;
+  const sections = sectionInputs.filter(input => input.checked).map(input => input.value);
 
   if (!keyword && !sections.length) {
-    Swal.fire({ icon: 'warning', title: 'Falta informar a busca', text: 'Digite uma palavra-chave ou selecione ao menos uma seção específica.' });
+    Swal.fire({
+      icon: 'warning',
+      title: 'Falta informar a busca',
+      text: 'Digite uma palavra-chave ou selecione ao menos uma secao especifica.'
+    });
     return;
   }
 
-  if (activeSource) { activeSource.close(); activeSource = null; }
+  if (activeSource) {
+    activeSource.close();
+    activeSource = null;
+  }
 
-  // Reset
-  rowData = [];
-  document.getElementById('resultsTbody').innerHTML        = '';
-  document.getElementById('resultsTable').style.display    = 'none';
-  document.getElementById('emptyState').style.display      = 'none';
-  document.getElementById('resultCountBadge').textContent  = '0';
-  document.getElementById('progressBar').style.width       = '0%';
-  document.getElementById('foundBadge').style.display      = 'none';
-  document.getElementById('foundCount').textContent        = '0';
-  document.getElementById('statusText').textContent        = 'Escaneando arquivos…';
-
-  // Tags
-  const tagsEl = document.getElementById('resultTags');
-  tagsEl.innerHTML = '';
-  if (keyword)              tagsEl.innerHTML += `<span class="badge bg-primary-soft text-primary">${keyword}</span>`;
-  if (sections.length)      tagsEl.innerHTML += `<span class="badge bg-info-soft text-info">${sections.length} seção(ões)</span>`;
-  if (dataInicio || dataFim) tagsEl.innerHTML += `<span class="badge bg-secondary-soft text-secondary">${dataInicio || '...'} → ${dataFim || '...'}</span>`;
-
-  document.getElementById('searchStatus').style.display  = '';
+  resetResults();
+  document.getElementById('statusText').textContent = 'Consultando indice...';
+  document.getElementById('searchStatus').style.display = '';
   document.getElementById('resultsSection').style.display = '';
   setSearching(true);
 
+  const tagsEl = document.getElementById('resultTags');
+  tagsEl.innerHTML = '';
+  if (!sections.length) tagsEl.innerHTML += '<span class="badge bg-primary-soft text-primary">Todo o DOERJ</span>';
+  if (sections.length) tagsEl.innerHTML += `<span class="badge bg-info-soft text-info">${sections.length} secao(oes)</span>`;
+  if (keyword) tagsEl.innerHTML += `<span class="badge bg-primary-soft text-primary">${keyword}</span>`;
+  if (dataInicio || dataFim) tagsEl.innerHTML += `<span class="badge bg-secondary-soft text-secondary">${dataInicio || '...'} -> ${dataFim || '...'}</span>`;
+
   const params = new URLSearchParams();
-  if (keyword)    params.set('keyword',    keyword);
+  if (keyword) params.set('keyword', keyword);
   if (dataInicio) params.set('dataInicio', dataInicio);
-  if (dataFim)    params.set('dataFim',    dataFim);
-  sections.forEach(s => params.append('sections', s));
+  if (dataFim) params.set('dataFim', dataFim);
+  sections.forEach(section => params.append('sections', section));
 
   activeSource = new EventSource(`/buscar?${params.toString()}`);
-
-  activeSource.onmessage = (e) => {
+  activeSource.onmessage = event => {
     let data;
-    try { data = JSON.parse(e.data); } catch { return; }
+    try { data = JSON.parse(event.data); } catch (_) { return; }
 
     if (data.type === 'scanning') {
-      document.getElementById('statusText').textContent = 'Escaneando arquivos no disco…';
+      document.getElementById('statusText').textContent = 'Consultando indice no banco...';
     }
 
     if (data.type === 'result') {
       addRow(data);
-      document.getElementById('resultCountBadge').textContent = rowData.length;
-      document.getElementById('foundCount').textContent       = rowData.length;
-      document.getElementById('foundBadge').style.display     = '';
+      document.getElementById('resultCountBadge').textContent = String(rowData.length);
+      document.getElementById('foundCount').textContent = String(rowData.length);
+      document.getElementById('foundBadge').style.display = '';
     }
 
     if (data.type === 'progress') {
       const pct = data.total ? Math.round((data.done / data.total) * 100) : 0;
-      document.getElementById('progressBar').style.width  = pct + '%';
-      document.getElementById('statusText').textContent   =
-        `Buscando… ${data.done.toLocaleString('pt-BR')} / ${data.total.toLocaleString('pt-BR')} PDFs`;
+      document.getElementById('progressBar').style.width = `${pct}%`;
+      document.getElementById('statusText').textContent = `Carregando resultados... ${data.done.toLocaleString('pt-BR')} / ${data.total.toLocaleString('pt-BR')}`;
     }
 
     if (data.type === 'done') {
-      activeSource.close(); activeSource = null;
+      if (activeSource) {
+        activeSource.close();
+        activeSource = null;
+      }
       setSearching(false);
       document.getElementById('progressBar').style.width = '100%';
-      document.getElementById('statusText').textContent  =
-        `Concluído — ${data.found.toLocaleString('pt-BR')} PDF(s) com ocorrência em ${data.total.toLocaleString('pt-BR')} lidos`;
+      document.getElementById('statusText').textContent = `Concluido - ${data.found.toLocaleString('pt-BR')} resultado(s)`;
       if (!rowData.length) document.getElementById('emptyState').style.display = '';
+      if (data.truncated) {
+        document.getElementById('maxResultsLabel').textContent = String(data.maxResults || rowData.length);
+        document.getElementById('truncatedInfo').style.display = '';
+      }
     }
 
     if (data.type === 'error') {
-      activeSource.close(); activeSource = null;
+      if (activeSource) {
+        activeSource.close();
+        activeSource = null;
+      }
       setSearching(false);
       Swal.fire({ icon: 'error', title: 'Erro na busca', text: data.message });
+      document.getElementById('statusText').textContent = 'Falha ao consultar indice.';
     }
   };
 
   activeSource.onerror = () => {
-    if (activeSource) { activeSource.close(); activeSource = null; }
+    if (activeSource) {
+      activeSource.close();
+      activeSource = null;
+    }
     setSearching(false);
-    document.getElementById('statusText').textContent = 'Conexão interrompida. Tente novamente.';
+    document.getElementById('statusText').textContent = 'Conexao interrompida. Tente novamente.';
   };
 }
 
-document.getElementById('formBusca').addEventListener('submit', e => { e.preventDefault(); startSearch(); });
+document.getElementById('formBusca').addEventListener('submit', event => {
+  event.preventDefault();
+  startSearch();
+});
+
 document.getElementById('btnCancelar').addEventListener('click', () => {
-  if (activeSource) { activeSource.close(); activeSource = null; }
+  if (activeSource) {
+    activeSource.close();
+    activeSource = null;
+  }
   setSearching(false);
   document.getElementById('statusText').textContent = 'Busca cancelada.';
 });

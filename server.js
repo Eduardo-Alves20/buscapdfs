@@ -15,6 +15,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 const searchRouter = require('./routes/search');
 app.use('/', searchRouter);
 
+if (process.env.ARCHIVE_SYNC_EMBEDDED_DAEMON === 'true') {
+  require('./scripts/archive-daemon');
+}
+
 const server = app.listen(PORT, () => {
   console.log(`Busca PDFs DOERJ rodando em http://localhost:${PORT}`);
 });
