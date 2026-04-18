@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { SECTION_OPTIONS, normalizeSections } = require('../lib/sections');
 const { ARCHIVE_ROOT, sanitizePath, parseIsoDate } = require('../lib/archive');
-const { searchIndexedDocuments, ensureSchema } = require('../lib/db');
+const { searchIndexedDocuments, getPool } = require('../lib/db');
 
 const router = express.Router();
 const MAX_RESULTS = Number(process.env.SEARCH_MAX_RESULTS || 1200);
@@ -31,7 +31,7 @@ function sanitizeHighlightedSnippet(value) {
 
 async function validateDatabase() {
   try {
-    await ensureSchema();
+    await getPool().query('select 1');
     return null;
   } catch (error) {
     return 'Banco nao conectado. Configure DATABASE_URL (ou variaveis PG*) e rode npm run db:init.';
