@@ -23,7 +23,7 @@ function sanitizeHighlightedSnippet(value) {
   const markerEnd = '__MARK_END__';
 
   return escapeHtml(raw)
-    .replace(/&lt;mark class=&quot;term-highlight&quot;&gt;/g, markerStart)
+    .replace(/&lt;mark&gt;/g, markerStart)
     .replace(/&lt;\/mark&gt;/g, markerEnd)
     .replaceAll(markerStart, '<mark class="term-highlight">')
     .replaceAll(markerEnd, '</mark>');
